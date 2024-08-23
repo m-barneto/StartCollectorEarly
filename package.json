@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "sptVersion": "~3.9",
     "author": "Mattdokn",
-    "contributors": [],
+    "contributors": [ "nader" ],
     "license": "MIT",
     "loadBefore": [],
     "loadAfter": [],
