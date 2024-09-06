@@ -6,19 +6,11 @@ import { LogTextColor } from "@spt/models/spt/logging/LogTextColor";
 import { IQuestCondition, VisibilityCondition } from "@spt/models/eft/common/tables/IQuest";
 import { VFS } from "@spt/utils/VFS";
 import path from "path";
+import SeededRandom from "./SeededRandom";
 
 export class StartCollectorEarly implements IPostDBLoadMod {
     private locales: Record<string, Record<string, string>>;
     private logger: ILogger;
-
-    public newObjectId(): string {
-        const timestamp = Math.floor(new Date().getTime() / 1000).toString(16);
-        const objectId = timestamp + "xxxxxxxxxxxxxxxx".replace(/[x]/g, () => {
-            return Math.floor(Math.random() * 16).toString(16);
-        }).toLowerCase();
-    
-        return objectId;
-    }
 
     public addToLocales(id: string, textId: string): void {
         for (const locale in this.locales) {
@@ -32,6 +24,8 @@ export class StartCollectorEarly implements IPostDBLoadMod {
         this.logger = container.resolve<ILogger>("WinstonLogger");
         const vfs = container.resolve<VFS>("VFS");
         const modConfig = JSON.parse(vfs.readFile(path.resolve(__dirname, "../config/config.json")));
+
+        const seededRandom: SeededRandom = new SeededRandom(1);
 
         if (modConfig.prerequisiteQuestCompletionRequired) {
             const conditions: IQuestCondition[] = [];
