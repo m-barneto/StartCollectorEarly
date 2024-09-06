@@ -79,6 +79,7 @@ export class StartCollectorEarly implements IPostDBLoadMod {
         }
         
 
+
         // Modify quest start condition to only need level 1
         const startCondition: IQuestCondition = {
             id: "5d777f5d86f7742fa901bc77",
@@ -86,7 +87,7 @@ export class StartCollectorEarly implements IPostDBLoadMod {
             target: "",
             conditionType: "Level",
             compareMethod: ">=",
-            value: 1
+            value: Number(modConfig.startingLevel)
         };
         tables.templates.quests["5c51aac186f77432ea65c552"].conditions.AvailableForStart = [startCondition];
 
