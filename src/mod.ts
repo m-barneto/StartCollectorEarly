@@ -29,7 +29,6 @@ export class StartCollectorEarly implements IPostDBLoadMod {
         this.config = jsonc.parse(vfs.readFile(path.resolve(__dirname, "../config/config.jsonc")));
 
         const quest: IQuest = tables.templates.quests["5c51aac186f77432ea65c552"];
-
         const seededRandom: SeededRandom = new SeededRandom(1);
 
         // Add original quest start conditions to quest finish
@@ -53,7 +52,7 @@ export class StartCollectorEarly implements IPostDBLoadMod {
                     }
                 ];
 
-                const visConditions = prevConditionId === null ? visConditionsEmpty : prevConditionVis;
+                const visConditions = ((prevConditionId === null || !this.config.prerequisiteQuestCompletionVisibility) ? visConditionsEmpty : prevConditionVis);
 
                 // Create quest completion requirement condition based on original quest requirement that was in AvailableForStart
                 conditions.push({
@@ -79,9 +78,13 @@ export class StartCollectorEarly implements IPostDBLoadMod {
         }
 
         // Remove FindItem conditions from available for finish tasks
-        for (let i = quest.conditions.AvailableForFinish; i > 0; i++) {
-            const element = array[i];
-            
+        for (let i = quest.conditions.AvailableForFinish.length - 1; i >= 0; i--) {
+            const condition = quest.conditions.AvailableForFinish[i];
+            if (condition.conditionType === "FindItem" && this.config.hideFindItemTasks) {
+                quest.conditions.AvailableForFinish.splice(i, 1);
+            } else if (condition.conditionType === "HandoverItem" && this.config.removeFoundInRaidRequirement) {
+                condition.onlyFoundInRaid = false;
+            }
         }
         
         // Modify quest start condition to only need level 1
@@ -96,6 +99,7 @@ export class StartCollectorEarly implements IPostDBLoadMod {
         quest.conditions.AvailableForStart = [startCondition];
 
         this.logger.logWithColor("[Start Collector Early] Modified Quest!", LogTextColor.CYAN);
+        //this.logger.logWithColor(JSON.stringify(quest, null, 4), LogTextColor.WHITE);
     }
 }
 
