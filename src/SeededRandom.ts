@@ -1,5 +1,5 @@
 // Restructured from https://gist.github.com/blixt/f17b47c62508be59987b
-export default class SeededRandom {
+export class SeededRandom {
     private _seed: number;
 
     constructor(seed: number) {

@@ -6,11 +6,14 @@ import { LogTextColor } from "@spt/models/spt/logging/LogTextColor";
 import { IQuestCondition, VisibilityCondition } from "@spt/models/eft/common/tables/IQuest";
 import { VFS } from "@spt/utils/VFS";
 import path from "path";
-import SeededRandom from "./SeededRandom";
+import { SeededRandom } from "./SeededRandom";
+import { jsonc } from "jsonc";
+import { ModConfig } from "./ModConfig";
 
 export class StartCollectorEarly implements IPostDBLoadMod {
     private locales: Record<string, Record<string, string>>;
     private logger: ILogger;
+    private config: ModConfig;
 
     public addToLocales(id: string, textId: string): void {
         for (const locale in this.locales) {
@@ -23,11 +26,12 @@ export class StartCollectorEarly implements IPostDBLoadMod {
         this.locales = tables.locales.global;
         this.logger = container.resolve<ILogger>("WinstonLogger");
         const vfs = container.resolve<VFS>("VFS");
-        const modConfig = JSON.parse(vfs.readFile(path.resolve(__dirname, "../config/config.json")));
+        this.config = jsonc.parse(vfs.readFile(path.resolve(__dirname, "../config/config.jsonc")));
 
         const seededRandom: SeededRandom = new SeededRandom(1);
 
-        if (modConfig.prerequisiteQuestCompletionRequired) {
+        // Add original quest start conditions to quest finish
+        if (this.config.prerequisiteQuestCompletionRequired) {
             const conditions: IQuestCondition[] = [];
             const origAvailableForStartConditions = tables.templates.quests["5c51aac186f77432ea65c552"].conditions.AvailableForStart;
             
@@ -40,7 +44,7 @@ export class StartCollectorEarly implements IPostDBLoadMod {
 
                 const prevConditionVis: VisibilityCondition[] = [
                     {
-                        id: this.newObjectId(),
+                        id: seededRandom.nextMongoId(),
                         target: prevConditionId,
                         oneSessionOnly: false,
                         conditionType: "CompleteCondition"
@@ -72,8 +76,6 @@ export class StartCollectorEarly implements IPostDBLoadMod {
             }
         }
         
-
-
         // Modify quest start condition to only need level 1
         const startCondition: IQuestCondition = {
             id: "5d777f5d86f7742fa901bc77",
@@ -81,7 +83,7 @@ export class StartCollectorEarly implements IPostDBLoadMod {
             target: "",
             conditionType: "Level",
             compareMethod: ">=",
-            value: Number(modConfig.startingLevel)
+            value: this.config.startingLevel
         };
         tables.templates.quests["5c51aac186f77432ea65c552"].conditions.AvailableForStart = [startCondition];
 

@@ -26,5 +26,8 @@
         "tsyringe": "4.8.0",
         "typescript": "5.4",
         "winston": "3.12"
+    },
+    "dependencies": {
+        "jsonc": "^2.0.0"
     }
 }
