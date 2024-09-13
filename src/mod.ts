@@ -65,7 +65,8 @@ export class StartCollectorEarly implements IPostDBLoadMod {
                     target: origCondition.target,
                     visibilityConditions: visConditions
                 });
-                this.addToLocales(origCondition.id + " name", origCondition.target as string + " name");
+                // + " name"
+                this.addToLocales(origCondition.id, origCondition.target as string + " name");
 
                 prevConditionId = origCondition.id;
             }
@@ -84,6 +85,7 @@ export class StartCollectorEarly implements IPostDBLoadMod {
                 quest.conditions.AvailableForFinish.splice(i, 1);
             } else if (condition.conditionType === "HandoverItem" && this.config.removeFoundInRaidRequirement) {
                 condition.onlyFoundInRaid = false;
+                this.locales["en"][condition.id] = this.locales["en"][condition.id].replace("found in raid item: ", "");
             }
         }
         
