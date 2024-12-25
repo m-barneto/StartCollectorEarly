@@ -16,7 +16,7 @@ export class SeededRandom {
     }
 
     public nextMongoId(): string {
-        const timestamp = Math.floor(this.next()).toString(16);
+        const timestamp = Math.floor(this.next()).toString(16).padStart(8, "0");
         const objectId = timestamp + "xxxxxxxxxxxxxxxx".replace(/[x]/g, () => {
             return Math.floor(this.nextFloat() * 16).toString(16);
         }).toLowerCase();
