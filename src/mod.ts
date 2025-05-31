@@ -3,12 +3,12 @@ import { IPostDBLoadMod } from "@spt/models/external/IPostDBLoadMod";
 import { DatabaseServer } from "@spt/servers/DatabaseServer";
 import { ILogger } from "@spt/models/spt/utils/ILogger";
 import { LogTextColor } from "@spt/models/spt/logging/LogTextColor";
-import { IQuest, IQuestCondition, VisibilityCondition } from "@spt/models/eft/common/tables/IQuest";
-import { VFS } from "@spt/utils/VFS";
+import { IQuest, IQuestCondition, IVisibilityCondition } from "@spt/models/eft/common/tables/IQuest";
 import path from "path";
 import { SeededRandom } from "./SeededRandom";
 import { jsonc } from "jsonc";
 import { ModConfig } from "./ModConfig";
+import { FileSystemSync } from "@spt/utils/FileSystemSync";
 
 export class StartCollectorEarly implements IPostDBLoadMod {
     private locales: Record<string, Record<string, string>>;
@@ -25,8 +25,8 @@ export class StartCollectorEarly implements IPostDBLoadMod {
         const tables = container.resolve<DatabaseServer>("DatabaseServer").getTables();
         this.locales = tables.locales.global;
         this.logger = container.resolve<ILogger>("WinstonLogger");
-        const vfs = container.resolve<VFS>("VFS");
-        this.config = jsonc.parse(vfs.readFile(path.resolve(__dirname, "../config/config.jsonc")));
+        const fileSystem = container.resolve<FileSystemSync>("FileSystemSync");
+        this.config = jsonc.parse(fileSystem.read(path.resolve(__dirname, "../config/config.jsonc")));
 
         const quest: IQuest = tables.templates.quests["5c51aac186f77432ea65c552"];
         const seededRandom: SeededRandom = new SeededRandom(1);
@@ -43,7 +43,7 @@ export class StartCollectorEarly implements IPostDBLoadMod {
             for (const i in origAvailableForStartConditions) {
                 const origCondition: IQuestCondition = origAvailableForStartConditions[i];
 
-                const prevConditionVis: VisibilityCondition[] = [
+                const prevConditionVis: IVisibilityCondition[] = [
                     {
                         id: seededRandom.nextMongoId(),
                         target: prevConditionId,
