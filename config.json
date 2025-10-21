@@ -1,0 +1,13 @@
+{
+    // Level to start quest at.
+    "StartingLevel": 1,
+    // Hide the Find Item tasks (cleans up the list a LOT)
+    "HideFindItemTasks": true,
+    // Remove found in raid requirement from Hand Over Item tasks
+    "RemoveFoundInRaidRequirement": true,
+    // Keep the requirement for required quests to be completed before collector can be completed. (vanilla behavior but still allows you to turn in items early)
+    "PrerequisiteQuestCompletionRequired": true,
+    // If enabled, will hide the long list of quest completion tasks and instead only show the next after the first quest task is completed (cleans up task list)
+    // Requires prerequisiteQuestCompletionRequired true
+    "PrerequisiteQuestCompletionVisibility": true
+}
