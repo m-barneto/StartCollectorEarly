@@ -103,18 +103,27 @@ public class AfterDBLoadHook(
             }
         }
 
+        logger.LogWithColor("[Start Collector Early] Moved original quest requirements to availabletocomplete", LogTextColor.Cyan);
+
         // Remove FindItem conditions from available for finish tasks
-        foreach (var condition in quest.Conditions.AvailableForFinish!) {
-            if (condition.ConditionType == "FindItem" && config.HideFindItemTasks) {
-                quest.Conditions.AvailableForFinish.Remove(condition);
-            } else if (condition.ConditionType == "HandoverItem" && config.RemoveFoundInRaidRequirement) {
-                condition.OnlyFoundInRaid = false;
-                localeService.GetLocaleDb()[condition.Id] = localeService.GetLocaleDb()[condition.Id].Replace("found in raid item: ", "");
+        if (config.HideFindItemTasks) {
+            quest.Conditions.AvailableForFinish!.RemoveAll(c => c.ConditionType == "FindItem");
+        }
+
+        logger.LogWithColor("[Start Collector Early] Removed FindItem tasks", LogTextColor.Cyan);
+
+        if (config.RemoveFoundInRaidRequirement) {
+            foreach (var condition in quest.Conditions.AvailableForFinish!) {
+                if (condition.ConditionType == "HandoverItem") {
+                    condition.OnlyFoundInRaid = false;
+                    localeService.GetLocaleDb()[condition.Id] = localeService.GetLocaleDb()[condition.Id].Replace("found in raid item: ", "");
+                }
             }
         }
 
+        logger.LogWithColor("[Start Collector Early] Removed found in raid requirement.", LogTextColor.Cyan);
+
         // Modify quest start condition to only need level 1
-        
         QuestCondition startCondition = new QuestCondition {
             Id = "5d777f5d86f7742fa901bc77",
             DynamicLocale = false,
