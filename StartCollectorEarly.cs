@@ -138,10 +138,7 @@ public class AfterDBLoadHook(
 
         // Add localization entries
         foreach (var (localeKey, localeKvP) in locales.Global) {
-            // We have to add a transformer here, because locales are lazy loaded due to them taking up huge space in memory
-            // The transformer will make sure that each time the locales are requested, the ones added below are included
-            localeKvP.AddTransformer(lazyloadedLocaleData =>
-            {
+            localeKvP.AddTransformer(lazyloadedLocaleData => {
                 foreach (var kvp in localesToAdd) {
                     lazyloadedLocaleData[kvp.Key] = kvp.Value;
                 }
