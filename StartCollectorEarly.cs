@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics;
+using System.Reflection;
 using System.Text;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
@@ -47,13 +48,14 @@ public class AfterDBLoadHook(
     Dictionary<string, string> localesToAdd = new Dictionary<string, string>();
 
     public Task OnLoad() {
+        Stopwatch sw = Stopwatch.StartNew();
         string pathToMod = modHelper.GetAbsolutePathToModFolder(Assembly.GetExecutingAssembly());
 
         config = modHelper.GetJsonDataFromFile<ModConfig>(pathToMod, "config.json");
 
-
         DatabaseTables tables = databaseServer.GetTables();
         locales = tables.Locales;
+        Dictionary<string, string> localeDb = localeService.GetLocaleDb();
 
         Quest quest = tables.Templates.Quests[QuestTpl.COLLECTOR];
 
@@ -96,7 +98,7 @@ public class AfterDBLoadHook(
                 // Target quest id
                 string? targetQuestId = origCondition.Target!.IsItem ? origCondition.Target.Item : origCondition.Target.List!.FirstOrDefault();
                 if (targetQuestId != null) {
-                    localesToAdd[origCondition.Id] = "Complete quest " + localeService.GetLocaleDb()[$"{origCondition.Target.Item} name"];
+                    localesToAdd[origCondition.Id] = "Complete quest " + localeDb[$"{origCondition.Target.Item} name"];
                 }
 
                 previousConditionId = origCondition.Id;
@@ -117,7 +119,7 @@ public class AfterDBLoadHook(
             foreach (var condition in quest.Conditions.AvailableForFinish!) {
                 if (condition.ConditionType == "HandoverItem") {
                     condition.OnlyFoundInRaid = false;
-                    localesToAdd.Add(condition.Id, localeService.GetLocaleDb()[condition.Id].Replace("found in raid item: ", ""));
+                    localesToAdd.Add(condition.Id, localeDb[condition.Id].Replace("found in raid item: ", ""));
                 }
             }
         }

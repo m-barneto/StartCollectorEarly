@@ -10,4 +10,8 @@
     <PackageReference Include="SPTarkov.Server.Core" Version="4.0.1" />
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy &quot;$(TargetDir)*.dll&quot; &quot;C:\Code\Library\SPT 4.0.0\SPT\user\mods\StartCollectorEarly\&quot; /E /Y" />
+  </Target>
+
 </Project>
