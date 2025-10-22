@@ -44,6 +44,7 @@ public class AfterDBLoadHook(
     private ModConfig config;
     private LocaleBase locales;
     private SeededRandom seededRandom = new SeededRandom(1);
+    Dictionary<string, string> localesToAdd = new Dictionary<string, string>();
 
     public Task OnLoad() {
         string pathToMod = modHelper.GetAbsolutePathToModFolder(Assembly.GetExecutingAssembly());
@@ -92,7 +93,11 @@ public class AfterDBLoadHook(
                 conditions.Add(newCondition);
 
                 // Add localization entry
-                AddToLocales(origCondition.Id, $"{origCondition.Target} name");
+                // Target quest id
+                string? targetQuestId = origCondition.Target!.IsItem ? origCondition.Target.Item : origCondition.Target.List!.FirstOrDefault();
+                if (targetQuestId != null) {
+                    localesToAdd[origCondition.Id] = "Complete quest " + localeService.GetLocaleDb()[$"{origCondition.Target.Item} name"];
+                }
 
                 previousConditionId = origCondition.Id;
             }
@@ -103,25 +108,19 @@ public class AfterDBLoadHook(
             }
         }
 
-        logger.LogWithColor("[Start Collector Early] Moved original quest requirements to availabletocomplete", LogTextColor.Cyan);
-
         // Remove FindItem conditions from available for finish tasks
         if (config.HideFindItemTasks) {
             quest.Conditions.AvailableForFinish!.RemoveAll(c => c.ConditionType == "FindItem");
         }
 
-        logger.LogWithColor("[Start Collector Early] Removed FindItem tasks", LogTextColor.Cyan);
-
         if (config.RemoveFoundInRaidRequirement) {
             foreach (var condition in quest.Conditions.AvailableForFinish!) {
                 if (condition.ConditionType == "HandoverItem") {
                     condition.OnlyFoundInRaid = false;
-                    localeService.GetLocaleDb()[condition.Id] = localeService.GetLocaleDb()[condition.Id].Replace("found in raid item: ", "");
+                    localesToAdd.Add(condition.Id, localeService.GetLocaleDb()[condition.Id].Replace("found in raid item: ", ""));
                 }
             }
         }
-
-        logger.LogWithColor("[Start Collector Early] Removed found in raid requirement.", LogTextColor.Cyan);
 
         // Modify quest start condition to only need level 1
         QuestCondition startCondition = new QuestCondition {
@@ -134,16 +133,23 @@ public class AfterDBLoadHook(
         ;
         quest.Conditions.AvailableForStart = [startCondition];
 
-        logger.LogWithColor("[Start Collector Early] Modified Quest!", LogTextColor.Cyan);
 
+        // Add localization entries
+        foreach (var (localeKey, localeKvP) in locales.Global) {
+            // We have to add a transformer here, because locales are lazy loaded due to them taking up huge space in memory
+            // The transformer will make sure that each time the locales are requested, the ones added below are included
+            localeKvP.AddTransformer(lazyloadedLocaleData =>
+            {
+                foreach (var kvp in localesToAdd) {
+                    lazyloadedLocaleData[kvp.Key] = kvp.Value;
+                }
+                return lazyloadedLocaleData;
+            });
+        }
+
+        logger.LogWithColor("[Start Collector Early] Loaded", LogTextColor.Cyan);
 
         return Task.CompletedTask;
-    }
-
-    void AddToLocales(string id, string textId) {
-        foreach (var locale in locales.Languages.Keys) {
-            localeService.GetLocaleDb(locale)[id] = textId;
-        }
     }
 }
 
